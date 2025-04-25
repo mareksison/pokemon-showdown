@@ -108,6 +108,10 @@ export interface PokemonSet {
 	 * Tera Type
 	 */
 	teraType?: string;
+	/**
+	 * Default gimmick mechanic
+	 */
+	gimmick?: "Tera" | "D-Max" | "Mega" | "Z-Power" | null;
 }
 
 export const Teams = new class Teams {
@@ -200,6 +204,16 @@ export const Teams = new class Teams {
 				buf += `,${set.gigantamax ? 'G' : ''}`;
 				buf += `,${set.dynamaxLevel !== undefined && set.dynamaxLevel !== 10 ? set.dynamaxLevel : ''}`;
 				buf += `,${set.teraType || ''}`;
+			}
+
+			if (!set.gimmick){
+				if (set.item.indexOf("ium Z") > -1){
+					set.gimmick = "Z-Power";
+				} else if (set.item.indexOf("ite") > -1 && set.item != "Eviolite"){
+					set.gimmick = "Mega";
+				} else {
+					set.gimmick = (set.gigantamax || (set.dynamaxLevel == 10)) ? "D-Max" : "Tera";
+				}
 			}
 		}
 
@@ -331,6 +345,12 @@ export const Teams = new class Teams {
 				set.gigantamax = !!misc[3];
 				set.dynamaxLevel = (misc[4] ? Number(misc[4]) : 10);
 				set.teraType = misc[5];
+				set.gimmick = 
+					(misc[6] === "Tera") ||
+					(misc[6] === "D-Max") ||
+					(misc[6] === "Mega") ||
+					(misc[6] === "Z-Power")
+				? misc[6] : null;
 			}
 			if (j < 0) break;
 			i = j + 1;
@@ -409,6 +429,10 @@ export const Teams = new class Teams {
 		if (set.teraType) {
 			out += `Tera Type: ${set.teraType}  \n`;
 		}
+		if (set.gimmick) {
+			out += `Gimmick: ${set.gimmick}  \n`;
+		}
+
 
 		// stats
 		if (!hideStats) {
@@ -495,6 +519,14 @@ export const Teams = new class Teams {
 			set.teraType = aggressive ? line.replace(/[^a-zA-Z0-9]/g, '') : line;
 		} else if (line === 'Gigantamax: Yes') {
 			set.gigantamax = true;
+		} else if (line.startsWith('Gimmick: ')) {
+			line = line.slice(11);
+			set.gimmick = 
+				(line === "Tera") ||
+				(line === "D-Max") ||
+				(line === "Mega") ||
+				(line === "Z-Power")
+			? line : null; // check first if this works
 		} else if (line.startsWith('EVs: ')) {
 			line = line.slice(5);
 			const evLines = line.split('/');
